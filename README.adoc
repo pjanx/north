@@ -1,0 +1,51 @@
+north
+=====
+
+_north_ is a TOTP authenticator hyper-focused on simplicity of use.
+Give it a bunch of otpauth:// URLs and it will show you the codes when you
+click on it in your Linux/Windows/macOS system tray, allowing you to copy codes
+into the clipboard with two clicks.
+
+Packages
+--------
+Regular releases are sporadic.  git master should be stable enough.
+////
+You can get a package with the latest development version
+as a https://git.janouch.name/p/nixexprs[Nix derivation].
+
+Windows/macOS binaries can be downloaded from
+https://git.janouch.name/p/north/releases[the Releases page on Gitea].
+////
+
+Building
+--------
+Build dependencies: CMake, pkg-config, icoutils (Windows) +
+Runtime dependencies: Qt 6, Qt 6 SVG
+
+ $ git clone https://git.janouch.name/p/north.git
+ $ cd north
+ $ cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug
+ $ cd build
+ $ make
+
+To install the applications, you can do either the usual:
+
+ # make install
+
+Or you can try telling CMake to make a package for you.  For Debian it is:
+
+ $ cpack -G DEB
+ # dpkg -i north-*.deb
+
+Contributing and Support
+------------------------
+Use https://git.janouch.name/p/north to report bugs, request features,
+or submit pull requests.  `git send-email` is tolerated.  If you want to discuss
+the project, feel free to join me at ircs://irc.janouch.name, channel #dev.
+
+Bitcoin donations are accepted at: 12r5uEWEgcHC46xd64tt3hHt9EUvYYDHe9
+
+License
+-------
+This software is released under the terms of the 0BSD license, the text of which
+is included within the package along with the list of authors.

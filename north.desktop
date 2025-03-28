@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=north
+GenericName=TOTP Authenticator
+X-GNOME-FullName=north Authenticator
+Icon=north
+Exec=north
+StartupNotify=true
+Categories=Utility;Security;
