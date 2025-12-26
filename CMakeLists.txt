@@ -151,10 +151,14 @@ elseif (QT6_IS_SHARED_LIBS_BUILD)
 	# and then prepend its subprefix to PATH before invoking cmake.
 	# To keep size low, remember to strip the resulting binary.
 
-	# XXX: QTBUG-127075, which can be circumvented by manually running
-	# macdeployqt on north.app before the install.
 	qt_generate_deploy_app_script(TARGET north OUTPUT_SCRIPT deploy)
 	install(SCRIPT "${deploy}")
+
+	# At least with Homebrew Qt, you will get QTBUG-127075,
+	# which can be circumvented by running macdeployqt twice.
+	if (APPLE)
+		install(SCRIPT "${deploy}")
+	endif()
 endif()
 
 # CPack
