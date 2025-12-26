@@ -53,8 +53,9 @@ if (WIN32)
 	# QT_TARGET_* are undocumented and wouldn't set the dependency.
 	set(resource_file "${PROJECT_BINARY_DIR}/north.rc")
 	list(APPEND extra_sources "${resource_file}")
+	# Qt specifically looks up IDI_ICON1 and nothing else.
 	add_custom_command(OUTPUT "${resource_file}"
-		COMMAND ${CMAKE_COMMAND} -E echo "1 ICON \"north.ico\""
+		COMMAND ${CMAKE_COMMAND} -E echo "IDI_ICON1 ICON \"north.ico\""
 			> "${resource_file}" VERBATIM)
 	set_property(SOURCE "${resource_file}"
 		APPEND PROPERTY OBJECT_DEPENDS "${PROJECT_BINARY_DIR}/north.ico")
