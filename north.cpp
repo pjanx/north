@@ -370,9 +370,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::openSettings()
 {
-	if (systemTrayIcon)
-		setIsForeground(true);
-
 	auto *dialog = new QDialog(this);
 	dialog->setWindowTitle("Settings");
 
@@ -403,6 +400,9 @@ void MainWindow::openSettings()
 	// otherwise the window most likely will stay in the background.
 	dialog->show();
 	dialog->raise();
+
+	if (systemTrayIcon)
+		setIsForeground(true);
 
 	auto result = dialog->exec();
 	auto text = textEdit->toPlainText();
