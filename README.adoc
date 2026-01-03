@@ -20,7 +20,7 @@ https://git.janouch.name/p/north/releases[the Releases page on Gitea].
 Building
 --------
 Build dependencies: CMake, pkg-config, icoutils (Windows) +
-Runtime dependencies: Qt 6, Qt 6 SVG
+Runtime dependencies: Qt 6 >= 6.9, Qt 6 SVG
 
  $ git clone https://git.janouch.name/p/north.git
  $ cd north
