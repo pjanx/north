@@ -216,10 +216,11 @@ MainWindow::MainWindow(QWidget *parent, bool useTray)
 
 	loadSettings();
 
-	updateTimer = new QTimer(this);
-	connect(updateTimer, &QTimer::timeout, this, &MainWindow::updateTOTPs);
+	this->updateTimer = new QTimer(this);
+	connect(this->updateTimer, &QTimer::timeout,
+		this, &MainWindow::updateTOTPs);
 
-	systemTrayIcon = nullptr;
+	this->systemTrayIcon = nullptr;
 	if (useTray) {
 		QIcon icon(":/systray.svg");
 #ifdef Q_OS_MACOS
@@ -227,15 +228,15 @@ MainWindow::MainWindow(QWidget *parent, bool useTray)
 		// and we need a different icon for it.
 		icon.setIsMask(true);
 #endif
-		systemTrayIcon = new QSystemTrayIcon(this);
-		systemTrayIcon->setToolTip("north authenticator");
-		systemTrayIcon->setIcon(icon);
+		this->systemTrayIcon = new QSystemTrayIcon(this);
+		this->systemTrayIcon->setToolTip("north authenticator");
+		this->systemTrayIcon->setIcon(icon);
 
 		auto *menu = new QMenu(this);
 
 		auto *widgetAction = new QWidgetAction(menu);
-		totpWidget = buildTOTPWidget(menu);
-		widgetAction->setDefaultWidget(totpWidget);
+		this->totpWidget = buildTOTPWidget(menu);
+		widgetAction->setDefaultWidget(this->totpWidget);
 		menu->addAction(widgetAction);
 
 		menu->addSeparator();
@@ -247,18 +248,23 @@ MainWindow::MainWindow(QWidget *parent, bool useTray)
 		connect(quitAction, &QAction::triggered,
 			&QApplication::quit);
 
-		systemTrayIcon->setContextMenu(menu);
+		// On macOS, the widget gets moved into the native menu,
+		// and it stops receiving show and hide events.
+		connect(menu, &QMenu::aboutToShow, this, &MainWindow::startUpdating);
+		connect(menu, &QMenu::aboutToHide, this->updateTimer, &QTimer::stop);
+
+		this->systemTrayIcon->setContextMenu(menu);
 #ifndef Q_OS_MACOS
-		connect(systemTrayIcon, &QSystemTrayIcon::activated,
+		connect(this->systemTrayIcon, &QSystemTrayIcon::activated,
 			this, [menu](QSystemTrayIcon::ActivationReason reason) {
 				if (reason == QSystemTrayIcon::Trigger)
 					menu->popup(QCursor::pos());
 			});
 #endif
-		systemTrayIcon->show();
+		this->systemTrayIcon->show();
 	} else {
-		totpWidget = buildTOTPWidget(this);
-		this->setCentralWidget(totpWidget);
+		this->totpWidget = buildTOTPWidget(this);
+		this->setCentralWidget(this->totpWidget);
 
 		// Qt seems to automatically resolve menu bar differences on macOS.
 		auto *menuBar = this->menuBar();
@@ -355,17 +361,22 @@ QWidget *MainWindow::buildTOTPWidget(QWidget *parent)
 	return widget;
 }
 
-bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+void MainWindow::startUpdating()
 {
-	if (obj == totpWidget) {
-		if (event->type() == QEvent::Show) {
-			updateTimer->start(100);  // 10 FPS
-			updateTOTPs();
-		} else if (event->type() == QEvent::Hide) {
-			updateTimer->stop();
-		}
-	}
-	return QMainWindow::eventFilter(obj, event);
+	this->updateTimer->start(100);  // 10 FPS
+	updateTOTPs();
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+	startUpdating();
+	QMainWindow::showEvent(event);
+}
+
+void MainWindow::hideEvent(QHideEvent *event)
+{
+	this->updateTimer->stop();
+	QMainWindow::hideEvent(event);
 }
 
 void MainWindow::openSettings()
@@ -380,7 +391,7 @@ void MainWindow::openSettings()
 
 	auto *textEdit = new QPlainTextEdit(dialog);
 	textEdit->setPlainText(QString::fromStdString(
-		std::accumulate(uris.begin(), uris.end(), std::string(),
+		std::accumulate(this->uris.begin(), this->uris.end(), std::string(),
 			[](const std::string &a, const std::string &b) {
 				return a.empty() ? b : a + "\n" + b;
 			})));
@@ -401,23 +412,23 @@ void MainWindow::openSettings()
 	dialog->show();
 	dialog->raise();
 
-	if (systemTrayIcon)
+	if (this->systemTrayIcon)
 		setIsForeground(true);
 
 	auto result = dialog->exec();
 	auto text = textEdit->toPlainText();
 	delete dialog;
 
-	if (systemTrayIcon)
+	if (this->systemTrayIcon)
 		setIsForeground(false);
 
 	if (result == QDialog::Accepted) {
-		uris.clear();
+		this->uris.clear();
 		auto lines = text.split('\n');
 		for (const auto &line : lines) {
 			auto trimmed = line.trimmed();
 			if (!trimmed.isEmpty())
-				uris.push_back(trimmed.toStdString());
+				this->uris.push_back(trimmed.toStdString());
 		}
 		saveSettings();
 		reloadTOTPs();
@@ -426,7 +437,7 @@ void MainWindow::openSettings()
 
 void MainWindow::updateTOTPs()
 {
-	if (totpWidget)
+	if (this->totpWidget)
 		for (auto &item : this->totps)
 			item.update();
 }
@@ -457,10 +468,10 @@ void MainWindow::loadSettings()
 
 	auto obj = doc.object();
 	auto array = obj.value("urls").toArray();
-	uris.clear();
+	this->uris.clear();
 	for (const auto &value : array) {
 		if (value.isString())
-			uris.push_back(value.toString().toStdString());
+			this->uris.push_back(value.toString().toStdString());
 	}
 }
 
@@ -477,7 +488,7 @@ void MainWindow::saveSettings()
 	}
 
 	QJsonArray array;
-	for (const auto &uri : uris)
+	for (const auto &uri : this->uris)
 		array.append(QString::fromStdString(uri));
 
 	QJsonObject obj;
@@ -499,21 +510,21 @@ void MainWindow::saveSettings()
 
 void MainWindow::reloadTOTPs()
 {
-	totps.clear();
-	delete totpWidget;
+	this->totps.clear();
+	delete this->totpWidget;
 
-	if (systemTrayIcon) {
-		auto *menu = systemTrayIcon->contextMenu();
+	if (this->systemTrayIcon) {
+		auto *menu = this->systemTrayIcon->contextMenu();
 		if (auto *old = qobject_cast<QWidgetAction *>(menu->actions().first()))
 			delete old;
 
 		auto *widgetAction = new QWidgetAction(menu);
-		totpWidget = buildTOTPWidget(menu);
-		widgetAction->setDefaultWidget(totpWidget);
+		this->totpWidget = buildTOTPWidget(menu);
+		widgetAction->setDefaultWidget(this->totpWidget);
 		menu->insertAction(menu->actions().first(), widgetAction);
 	} else {
-		totpWidget = buildTOTPWidget(this);
-		this->setCentralWidget(totpWidget);
+		this->totpWidget = buildTOTPWidget(this);
+		this->setCentralWidget(this->totpWidget);
 	}
 
 	updateTOTPs();
@@ -538,6 +549,10 @@ int main(int argc, char *argv[])
 
 	bool useTray = QSystemTrayIcon::isSystemTrayAvailable() &&
 		!parser.isSet(noTray);
+
+	// Keep a reference to OpenSSL's default provider,
+	// which avoids wasteful rebuilds, as well as a huge resource leak in 4.1.
+	QCryptographicHash _(QCryptographicHash::Sha1);
 
 	MainWindow w(nullptr, useTray);
 	if (!useTray) {

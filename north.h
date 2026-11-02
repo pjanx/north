@@ -52,12 +52,14 @@ public:
 	~MainWindow() {}
 
 protected:
-	bool eventFilter(QObject *obj, QEvent *event) override;
+	void hideEvent(QHideEvent *event) override;
+	void showEvent(QShowEvent *event) override;
 
 private:
 	QWidget *buildTOTPWidget(QWidget *parent);
 	void loadSettings();
 	void saveSettings();
+	void startUpdating();
 	void reloadTOTPs();
 
 private slots:
