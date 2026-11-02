@@ -26,11 +26,11 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QProgressBar>
 #include <QStyle>
 #include <QSystemTrayIcon>
-#include <QTextEdit>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidgetAction>
@@ -378,7 +378,7 @@ void MainWindow::openSettings()
 	auto *label = new QLabel("Enter otpauth:// URLs, one per line:", dialog);
 	layout->addWidget(label);
 
-	auto *textEdit = new QTextEdit(dialog);
+	auto *textEdit = new QPlainTextEdit(dialog);
 	textEdit->setPlainText(QString::fromStdString(
 		std::accumulate(uris.begin(), uris.end(), std::string(),
 			[](const std::string &a, const std::string &b) {
